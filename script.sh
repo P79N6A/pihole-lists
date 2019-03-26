@@ -44,34 +44,26 @@ compile_list(){
   user=$(git remote get-url --all origin | cut -f 2 -d":" | cut -f 1 -d"." | cut -f 1 -d"/")
   repo=$(git remote get-url --all origin | cut -f 2 -d":" | cut -f 1 -d"." | cut -f 2 -d"/")
   for u in $(find tmp/list.* | cut -f 2 -d"/" | sort -t . -k 2 -g); do
-    echo "https://raw.githubusercontent.com/${user}/${repo}/blocklist/mirror/${u}" >> tmp/adlists.list
+    echo "https://raw.githubusercontent.com/${user}/${repo}/master/mirror/${u}" >> tmp/adlists.list
   done
 }
 
 ###
-# Checkout dedicated branch for storing blocklist
-# Amend previous commit with latest version
-# rebase on master so blocklist is always one commit above master
+# make sure we're on master
+# move tmp/adlists.list to root of project
+# move all lists.i to mirror dir
+# add relevent files
+# commit to master
 # push to origin
 ###
 save_list(){
   msg="$(date +%d-%m-%Y_%H:%M -u) UTC"
-  
-  # adlists.list lives in master branch
   git checkout master
   mv tmp/adlists.list adlists.list
-  git add adlists.list
+  mv tmp/list.* mirror/
+  git add adlists.list mirror/
   git commit -m "${msg}"
   git push
-  
-  # actual lists lives in blocklist branch
-  git checkout blocklist
-  git reset --soft HEAD~1
-  mv tmp/list.* mirror/
-  git add mirror/
-  git commit -m "${msg}"
-  git rebase master
-  git push --force
 }
 
 clean_tmp(){
